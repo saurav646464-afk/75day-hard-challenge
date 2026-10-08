@@ -33,14 +33,14 @@ export default function BattingBarChart({ logs, startDate }: BattingBarChartProp
         <YAxis tick={{ fill: '#71717a', fontSize: 10 }} />
         <Tooltip
           contentStyle={{ background: '#18181b', border: '1px solid #3f3f46', borderRadius: 8 }}
-          labelStyle={{ color: '#a1a1aa' }}
+          labelStyle={{ color: '#f97316' }}
           formatter={(val) => [`${val ?? 0} balls`, 'Batting'] as [string, string]}
           labelFormatter={l => `Day ${l}`}
         />
-        <ReferenceLine y={1000} stroke="#10b981" strokeDasharray="4 4" opacity={0.6} />
+        <ReferenceLine y={1000} stroke="#f97316" strokeDasharray="4 4" opacity={0.6} />
         <Bar
           dataKey="balls"
-          fill="#10b981"
+          fill="#f97316"
           radius={[4, 4, 0, 0]}
           maxBarSize={24}
         />

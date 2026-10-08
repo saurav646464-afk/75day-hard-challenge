@@ -88,19 +88,19 @@ export default function WeeklyCheckinCard({ attemptId, date, required, readonly 
   }
 
   return (
-    <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-4">
+    <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-base font-bold text-white">📅 Weekly Check-in</h3>
-        {required && <span className="text-xs text-red-400 bg-red-900/20 px-2 py-0.5 rounded-full">Required</span>}
+        <h3 className="text-sm font-black text-orange-500 uppercase tracking-wider">📅 Weekly Sunday Check-in</h3>
+        {required && <span className="text-xs font-bold text-red-400 bg-red-950/60 border border-red-900/60 px-2.5 py-0.5 rounded-full">Required</span>}
       </div>
 
       {photoUrl && (
-        <img src={photoUrl} alt="Progress photo" className="w-full rounded-xl mb-4 object-cover max-h-48" />
+        <img src={photoUrl} alt="Progress photo" className="w-full rounded-xl mb-4 object-cover max-h-48 border border-zinc-800" />
       )}
 
       <div className="space-y-3">
         <div>
-          <label className="text-xs text-zinc-500 mb-1 block">Body Weight (kg)</label>
+          <label className="text-xs font-semibold text-zinc-400 mb-1 block">Body Weight (kg)</label>
           <input
             type="number"
             inputMode="decimal"
@@ -109,15 +109,15 @@ export default function WeeklyCheckinCard({ attemptId, date, required, readonly 
             onChange={e => setWeight(e.target.value)}
             disabled={readonly}
             placeholder="e.g. 72.5"
-            className="w-full bg-zinc-800 rounded-xl px-4 h-12 text-white text-lg font-bold border border-zinc-700 focus:border-emerald-500 focus:outline-none"
+            className="w-full bg-zinc-800 rounded-xl px-4 h-12 text-white text-lg font-bold border border-zinc-700 focus:border-orange-500 focus:outline-none"
           />
         </div>
 
         {!readonly && (
           <>
-            <label className="flex items-center justify-center gap-2 w-full py-3 rounded-xl border-2 border-dashed border-zinc-600 text-zinc-400 text-sm cursor-pointer active:border-emerald-500 transition-colors">
-              {loading ? <Loader size={16} className="animate-spin" /> : <Camera size={16} />}
-              <span>{loading ? 'Uploading...' : 'Take / Choose Photo'}</span>
+            <label className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl border-2 border-dashed border-zinc-700 text-zinc-300 text-sm font-bold cursor-pointer active:border-orange-500 transition-colors bg-zinc-800/50">
+              {loading ? <Loader size={16} className="animate-spin text-orange-400" /> : <Camera size={16} className="text-orange-400" />}
+              <span>{loading ? 'Uploading photo...' : 'Take / Upload Photo'}</span>
               <input
                 type="file"
                 accept="image/*"
@@ -130,7 +130,7 @@ export default function WeeklyCheckinCard({ attemptId, date, required, readonly 
             <button
               onClick={handleSave}
               disabled={saving}
-              className="w-full py-3 rounded-xl bg-emerald-500 text-white font-bold active:bg-emerald-600 transition-colors flex items-center justify-center gap-2"
+              className="w-full py-3.5 rounded-xl bg-orange-500 text-white font-bold active:bg-orange-600 transition-colors flex items-center justify-center gap-2"
             >
               {saving ? <Loader size={16} className="animate-spin" /> : saved ? <Check size={16} /> : null}
               {saved ? 'Saved!' : 'Save Check-in'}

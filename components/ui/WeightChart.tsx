@@ -22,16 +22,16 @@ export default function WeightChart({ data }: WeightChartProps) {
         />
         <Tooltip
           contentStyle={{ background: '#18181b', border: '1px solid #3f3f46', borderRadius: 8 }}
-          labelStyle={{ color: '#a1a1aa' }}
+          labelStyle={{ color: '#f97316' }}
           formatter={(val) => [`${val ?? 0}kg`, 'Weight'] as [string, string]}
         />
         <Line
           type="monotone"
           dataKey="weight"
-          stroke="#10b981"
+          stroke="#f97316"
           strokeWidth={2}
-          dot={{ fill: '#10b981', r: 4 }}
-          activeDot={{ r: 6, fill: '#34d399' }}
+          dot={{ fill: '#f97316', r: 4 }}
+          activeDot={{ r: 6, fill: '#fb923c' }}
         />
       </LineChart>
     </ResponsiveContainer>

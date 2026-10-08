@@ -14,16 +14,15 @@ export default function ProgressRing({ percent, size = 52, strokeWidth = 4 }: Pr
   const cy = size / 2
 
   const getColor = () => {
-    if (percent >= 100) return '#10b981'
-    if (percent >= 75) return '#22d3ee'
-    if (percent >= 50) return '#f59e0b'
-    return '#6b7280'
+    if (percent >= 100) return '#f97316' // Orange
+    if (percent >= 75) return '#fb923c'  // Light orange
+    if (percent >= 50) return '#eab308'  // Yellow
+    return '#52525b'                      // Zinc
   }
 
   return (
     <div className="relative" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
-        {/* Background circle */}
         <circle
           cx={cx}
           cy={cy}
@@ -32,7 +31,6 @@ export default function ProgressRing({ percent, size = 52, strokeWidth = 4 }: Pr
           stroke="#27272a"
           strokeWidth={strokeWidth}
         />
-        {/* Progress circle */}
         <circle
           cx={cx}
           cy={cy}
@@ -47,7 +45,7 @@ export default function ProgressRing({ percent, size = 52, strokeWidth = 4 }: Pr
         />
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-xs font-bold text-white" style={{ fontSize: size < 50 ? 10 : 12 }}>
+        <span className="text-xs font-black text-white" style={{ fontSize: size < 50 ? 10 : 12 }}>
           {percent}%
         </span>
       </div>

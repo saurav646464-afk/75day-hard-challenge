@@ -118,24 +118,24 @@ export default function SettingsScreen() {
 
   return (
     <div className="p-4 pb-8 space-y-6">
-      <h2 className="text-xl font-bold text-white">Settings</h2>
+      <h2 className="text-xl font-black text-white">Settings</h2>
 
       {/* Start Date */}
       <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
         <div className="flex items-center gap-2 mb-3">
-          <Calendar size={16} className="text-emerald-400" />
-          <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-wider">Challenge Start Date</h3>
+          <Calendar size={18} className="text-orange-500" />
+          <h3 className="text-xs font-black text-orange-500 uppercase tracking-wider">Start Date</h3>
         </div>
         <input
           type="date"
           value={startDate}
           onChange={e => setStartDate(e.target.value)}
-          className="w-full bg-zinc-800 rounded-xl px-4 h-12 text-white text-base border border-zinc-700 focus:border-emerald-500 focus:outline-none mb-3"
+          className="w-full bg-zinc-800 rounded-xl px-4 h-12 text-white text-base font-bold border border-zinc-700 focus:border-orange-500 focus:outline-none mb-3"
         />
         <button
           onClick={saveSettings}
           disabled={saving}
-          className="w-full py-3 rounded-xl bg-emerald-500 text-white font-bold active:bg-emerald-600 transition-colors"
+          className="w-full py-3.5 rounded-xl bg-orange-500 text-white font-bold text-base active:bg-orange-600 transition-colors"
         >
           {saved ? '✓ Saved!' : saving ? 'Saving...' : 'Save Date'}
         </button>
@@ -144,12 +144,12 @@ export default function SettingsScreen() {
       {/* Task Config */}
       <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-wider">Tasks</h3>
+          <h3 className="text-xs font-black text-orange-500 uppercase tracking-wider">Task Configuration</h3>
           <button
             onClick={() => setShowAddTask(!showAddTask)}
-            className="flex items-center gap-1 text-emerald-400 text-sm font-medium"
+            className="flex items-center gap-1 text-orange-400 text-xs font-bold bg-zinc-800 border border-zinc-700 px-3 py-1.5 rounded-xl active:bg-zinc-700"
           >
-            <Plus size={14} />{showAddTask ? 'Cancel' : 'Add'}
+            <Plus size={14} />{showAddTask ? 'Cancel' : 'Add Task'}
           </button>
         </div>
 
@@ -160,11 +160,11 @@ export default function SettingsScreen() {
               onChange={e => setNewTaskLabel(e.target.value)}
               placeholder="New task name..."
               onKeyDown={e => e.key === 'Enter' && addCustomTask()}
-              className="flex-1 bg-zinc-800 rounded-xl px-3 h-11 text-white text-base border border-zinc-700 focus:border-emerald-500 focus:outline-none"
+              className="flex-1 bg-zinc-800 rounded-xl px-3 h-11 text-white text-base border border-zinc-700 focus:border-orange-500 focus:outline-none"
             />
             <button
               onClick={addCustomTask}
-              className="px-4 h-11 rounded-xl bg-emerald-500 text-white font-bold active:bg-emerald-600"
+              className="px-4 h-11 rounded-xl bg-orange-500 text-white font-bold active:bg-orange-600"
             >
               Add
             </button>
@@ -175,12 +175,12 @@ export default function SettingsScreen() {
           {tasks.map(task => (
             <div key={task.key} className="flex items-center gap-3 py-3">
               <span className={cn(
-                'flex-1 text-base',
+                'flex-1 text-base font-medium',
                 task.enabled ? 'text-white' : 'text-zinc-600 line-through'
               )}>
                 {task.label}
                 {task.is_custom && (
-                  <span className="ml-2 text-xs text-zinc-600 bg-zinc-800 px-1.5 py-0.5 rounded-full">custom</span>
+                  <span className="ml-2 text-xs text-orange-400 bg-orange-950/60 border border-orange-900/60 px-2 py-0.5 rounded-full font-bold">custom</span>
                 )}
               </span>
               <button
@@ -189,14 +189,14 @@ export default function SettingsScreen() {
                 aria-label={`Toggle ${task.label}`}
               >
                 {task.enabled
-                  ? <ToggleRight size={28} className="text-emerald-400" />
-                  : <ToggleLeft size={28} className="text-zinc-600" />
+                  ? <ToggleRight size={30} className="text-orange-500" />
+                  : <ToggleLeft size={30} className="text-zinc-700" />
                 }
               </button>
               {task.is_custom && (
                 <button
                   onClick={() => deleteTask(task.key)}
-                  className="p-1 text-red-500 active:text-red-400"
+                  className="p-1 text-red-400 active:text-red-300"
                   aria-label={`Delete ${task.label}`}
                 >
                   <Trash2 size={18} />
@@ -215,29 +215,29 @@ export default function SettingsScreen() {
             className="flex items-center justify-between w-full"
           >
             <div className="flex items-center gap-2">
-              <History size={16} className="text-zinc-400" />
-              <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-wider">Previous Attempts</h3>
+              <History size={18} className="text-orange-500" />
+              <h3 className="text-xs font-black text-orange-500 uppercase tracking-wider">Previous Attempts</h3>
             </div>
-            <span className="text-zinc-500 text-sm">{showHistory ? '▲' : '▼'} {previousAttempts.length}</span>
+            <span className="text-zinc-400 text-xs font-bold">{showHistory ? '▲ Hide' : '▼ View'} ({previousAttempts.length})</span>
           </button>
 
           {showHistory && (
             <div className="mt-3 space-y-2">
               {previousAttempts.map(att => (
-                <div key={att.id} className="p-3 bg-zinc-800 rounded-xl">
+                <div key={att.id} className="p-3 bg-zinc-800 border border-zinc-700 rounded-xl">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-white font-medium">
+                    <span className="text-sm text-white font-bold">
                       Started: {att.start_date}
                     </span>
                     <span className={cn(
-                      'text-xs px-2 py-0.5 rounded-full font-medium',
-                      att.status === 'completed' ? 'bg-emerald-900 text-emerald-400' : 'bg-red-900 text-red-400'
+                      'text-xs px-2.5 py-0.5 rounded-full font-bold uppercase',
+                      att.status === 'completed' ? 'bg-orange-500/20 text-orange-400 border border-orange-500/40' : 'bg-red-950 text-red-400 border border-red-900'
                     )}>
                       {att.status}
                     </span>
                   </div>
                   {att.fail_reason && (
-                    <p className="text-xs text-zinc-500 mt-1">{att.fail_reason}</p>
+                    <p className="text-xs text-zinc-400 mt-1">{att.fail_reason}</p>
                   )}
                 </div>
               ))}
@@ -246,19 +246,19 @@ export default function SettingsScreen() {
         </div>
       )}
 
-      {/* Export & Logout */}
-      <div className="space-y-3">
+      {/* Backup & Logout */}
+      <div className="space-y-3 pt-2">
         <button
           onClick={exportData}
-          className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-zinc-800 text-zinc-300 font-semibold border border-zinc-700 active:bg-zinc-700"
+          className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-zinc-900 text-white font-bold text-base border border-zinc-700 active:bg-zinc-800 transition-colors"
         >
-          <Download size={18} />
-          Export Data (JSON)
+          <Download size={18} className="text-orange-500" />
+          Export Backup Data (JSON)
         </button>
 
         <button
           onClick={handleLogout}
-          className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-red-900/20 text-red-400 font-semibold border border-red-900/30 active:bg-red-900/40"
+          className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-red-950/40 text-red-400 font-bold text-base border border-red-900/40 active:bg-red-900/60 transition-colors"
         >
           <LogOut size={18} />
           Log Out

@@ -1,6 +1,3 @@
-// app/login/page.tsx
-// Login page — accessible without auth
-
 'use client'
 
 import React, { useState } from 'react'
@@ -38,22 +35,24 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-zinc-950 flex flex-col items-center justify-center p-6">
+    <div className="min-h-dvh bg-zinc-950 text-white flex flex-col items-center justify-center p-6">
       <div className="w-full max-w-sm">
-        {/* Logo */}
+        {/* Logo Header */}
         <div className="text-center mb-8">
-          <div className="text-6xl mb-3">🏏</div>
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-orange-500/10 border border-orange-500/30 text-5xl mb-4">
+            🏏
+          </div>
           <h1 className="text-2xl font-black text-white leading-tight">
             75 Day Hard Challenge
           </h1>
-          <p className="text-zinc-400 text-sm mt-1">Cricketer Edition</p>
+          <p className="text-orange-500 font-bold text-sm mt-1 uppercase tracking-wider">Cricketer Edition</p>
         </div>
 
-        {/* Form */}
+        {/* Login Form */}
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <label className="block text-sm text-zinc-400 mb-1.5" htmlFor="email">
-              Email
+            <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1.5" htmlFor="email">
+              Email Address
             </label>
             <input
               id="email"
@@ -63,13 +62,13 @@ export default function LoginPage() {
               value={email}
               onChange={e => setEmail(e.target.value)}
               required
-              className="w-full h-14 bg-zinc-900 border border-zinc-700 rounded-2xl px-4 text-white text-base focus:border-emerald-500 focus:outline-none placeholder:text-zinc-600 transition-colors"
+              className="w-full h-14 bg-zinc-900 border border-zinc-700 rounded-2xl px-4 text-white text-base font-medium focus:border-orange-500 focus:outline-none placeholder:text-zinc-600 transition-colors"
               placeholder="your@email.com"
             />
           </div>
 
           <div>
-            <label className="block text-sm text-zinc-400 mb-1.5" htmlFor="password">
+            <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1.5" htmlFor="password">
               Password
             </label>
             <input
@@ -79,13 +78,13 @@ export default function LoginPage() {
               value={password}
               onChange={e => setPassword(e.target.value)}
               required
-              className="w-full h-14 bg-zinc-900 border border-zinc-700 rounded-2xl px-4 text-white text-base focus:border-emerald-500 focus:outline-none placeholder:text-zinc-600 transition-colors"
+              className="w-full h-14 bg-zinc-900 border border-zinc-700 rounded-2xl px-4 text-white text-base font-medium focus:border-orange-500 focus:outline-none placeholder:text-zinc-600 transition-colors"
               placeholder="••••••••"
             />
           </div>
 
           {error && (
-            <div className="p-3 rounded-xl bg-red-900/20 border border-red-800 text-red-400 text-sm text-center">
+            <div className="p-3.5 rounded-2xl bg-red-950/40 border border-red-800 text-red-400 text-sm font-semibold text-center">
               {error}
             </div>
           )}
@@ -93,7 +92,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full h-14 rounded-2xl bg-emerald-500 text-white font-bold text-lg active:bg-emerald-600 transition-colors disabled:opacity-60 mt-2"
+            className="w-full h-14 rounded-2xl bg-orange-500 text-white font-black text-lg active:bg-orange-600 transition-colors disabled:opacity-60 mt-2 shadow-lg shadow-orange-500/20"
           >
             {loading ? (
               <span className="flex items-center justify-center gap-2">
@@ -106,8 +105,8 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p className="text-center text-zinc-600 text-xs mt-6">
-          Personal app — no sign-up available
+        <p className="text-center text-zinc-600 text-xs font-medium mt-6">
+          Personal app — private authentication
         </p>
       </div>
     </div>

@@ -45,7 +45,7 @@ export default function AppShell() {
                 className={cn(
                   'flex-1 flex flex-col items-center justify-center py-2 gap-1 min-h-[56px]',
                   'transition-colors duration-150',
-                  active ? 'text-emerald-400' : 'text-zinc-500'
+                  active ? 'text-orange-500' : 'text-zinc-500'
                 )}
                 aria-label={tab.label}
                 aria-current={active ? 'page' : undefined}
@@ -54,12 +54,12 @@ export default function AppShell() {
                   size={24}
                   className={cn(
                     'transition-all duration-150',
-                    active && 'scale-110'
+                    active && 'scale-110 text-orange-500'
                   )}
                 />
                 <span className={cn(
-                  'text-[11px] font-medium leading-none',
-                  active ? 'text-emerald-400' : 'text-zinc-500'
+                  'text-[11px] font-bold leading-none',
+                  active ? 'text-orange-500' : 'text-zinc-500'
                 )}>
                   {tab.label}
                 </span>
