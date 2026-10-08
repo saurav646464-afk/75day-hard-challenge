@@ -4,9 +4,9 @@ import React, { useEffect, useRef, useState } from 'react'
 import { useApp } from '@/components/AppProvider'
 import {
   getDailyQuote, getDayNumber, getWeekIndex, getWeekDayRange, getDateForDay,
-  getGymStatus, getDaysRemainingInWeek, isSunday,
+  getGymStatus, getRunningStatus, getDaysRemainingInWeek, isSunday,
   isWaterDone, isSleepDone, isMealsDone, isTaskDone, getDayCompletionPercent, formatDisplayDate,
-  CHALLENGE_DAYS, GYM_REQUIRED_PER_WEEK, isCheckinRequired, addDays
+  CHALLENGE_DAYS, GYM_REQUIRED_PER_WEEK, RUNNING_REQUIRED_PER_WEEK, isCheckinRequired, addDays
 } from '@/lib/challenge'
 import { cn, haptic, celebrateCompletion, formatWater } from '@/lib/utils'
 import { ChevronLeft, ChevronRight, Check, Flame, Dumbbell, Droplets, Moon, BookOpen, AlertTriangle } from 'lucide-react'
@@ -61,6 +61,7 @@ export default function TodayScreen() {
 
   const daysRemaining = getDaysRemainingInWeek(dayNum)
   const gymStatus = getGymStatus(weekLogs, daysRemaining)
+  const runningStatus = getRunningStatus(weekLogs, daysRemaining)
 
   const quote = getDailyQuote(todayDayNum)
 
@@ -192,25 +193,47 @@ export default function TodayScreen() {
         </div>
       )}
 
+      {runningStatus.isUrgent && isToday && (
+        <div className="mx-4 mt-4 p-3 rounded-xl bg-red-950/40 border border-red-500/40 flex items-center gap-2">
+          <AlertTriangle size={18} className="text-red-400 flex-shrink-0" />
+          <span className="text-sm text-red-300 font-bold">
+            Running karna zaroori hai aaj! ({runningStatus.needed} sessions remaining)
+          </span>
+        </div>
+      )}
+
       <div className="px-4 pt-4 pb-6 space-y-5">
         {/* Quote */}
         <div className="p-4 rounded-2xl bg-zinc-900 border border-zinc-800">
           <p className="text-sm text-zinc-200 italic leading-relaxed">&ldquo;{quote}&rdquo;</p>
         </div>
 
-        {/* Gym counter */}
-        <div className="flex items-center justify-between p-4 rounded-2xl bg-zinc-900 border border-zinc-800">
-          <div className="flex items-center gap-2.5">
-            <Dumbbell size={18} className="text-orange-500" />
-            <span className="text-sm font-semibold text-white">Gym this week</span>
+        {/* Weekly summary cards (Gym & Running 3x/week) */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-zinc-900 border border-zinc-800">
+            <div className="flex items-center gap-2">
+              <Dumbbell size={16} className="text-orange-500" />
+              <span className="text-xs font-semibold text-white">Gym this week</span>
+            </div>
+            <div className={cn(
+              'font-black text-sm',
+              gymStatus.completed >= GYM_REQUIRED_PER_WEEK ? 'text-orange-400' : 'text-white'
+            )}>
+              {gymStatus.completed}/{GYM_REQUIRED_PER_WEEK}
+            </div>
           </div>
-          <div className={cn(
-            'flex items-center gap-1 font-black text-lg',
-            gymStatus.completed >= GYM_REQUIRED_PER_WEEK ? 'text-orange-400' : 'text-white'
-          )}>
-            <span>{gymStatus.completed}</span>
-            <span className="text-zinc-600 font-normal">/</span>
-            <span className="text-zinc-400">{GYM_REQUIRED_PER_WEEK}</span>
+
+          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-zinc-900 border border-zinc-800">
+            <div className="flex items-center gap-2">
+              <Flame size={16} className="text-orange-500" />
+              <span className="text-xs font-semibold text-white">Running</span>
+            </div>
+            <div className={cn(
+              'font-black text-sm',
+              runningStatus.completed >= RUNNING_REQUIRED_PER_WEEK ? 'text-orange-400' : 'text-white'
+            )}>
+              {runningStatus.completed}/{RUNNING_REQUIRED_PER_WEEK}
+            </div>
           </div>
         </div>
 
@@ -241,9 +264,9 @@ export default function TodayScreen() {
               onChange={v => updateTodayLog({ catching_balls: v })}
               disabled={!canEdit}
             />
+            <SimpleTask key="running" taskKey="running" log={log} taskConfig={taskConfig} canEdit={canEdit} onToggle={toggleTask} badge="3x/week" />
             <SimpleTask key="shadow" taskKey="shadow" log={log} taskConfig={taskConfig} canEdit={canEdit} onToggle={toggleTask} />
             <SimpleTask key="stretching" taskKey="stretching" log={log} taskConfig={taskConfig} canEdit={canEdit} onToggle={toggleTask} />
-            <SimpleTask key="running" taskKey="running" log={log} taskConfig={taskConfig} canEdit={canEdit} onToggle={toggleTask} />
             <SimpleTask key="video_review" taskKey="video_review" log={log} taskConfig={taskConfig} canEdit={canEdit} onToggle={toggleTask} />
             <SimpleTask key="visualization" taskKey="visualization" log={log} taskConfig={taskConfig} canEdit={canEdit} onToggle={toggleTask} />
           </TaskSection>
@@ -308,7 +331,7 @@ function TaskSection({ title, children }: { title: string; children: React.React
 }
 
 function SimpleTask({
-  taskKey, log, taskConfig, canEdit, onToggle, optional
+  taskKey, log, taskConfig, canEdit, onToggle, optional, badge
 }: {
   taskKey: string
   log: ReturnType<typeof emptyLogLocal>
@@ -316,6 +339,7 @@ function SimpleTask({
   canEdit: boolean
   onToggle: (key: string) => void
   optional?: boolean
+  badge?: string
 }) {
   const cfg = taskConfig.find(t => t.key === taskKey)
   if (!cfg?.enabled) return null
@@ -337,6 +361,9 @@ function SimpleTask({
       )}>
         {cfg.label}
       </span>
+      {badge && (
+        <span className="text-[10px] text-orange-400 bg-orange-950/60 border border-orange-900 px-2 py-0.5 rounded-full font-bold">{badge}</span>
+      )}
       {optional && (
         <span className="text-[10px] text-zinc-500 bg-zinc-800 px-2 py-0.5 rounded-full font-bold">optional</span>
       )}
@@ -626,7 +653,7 @@ function GymTask({ log, canEdit, onUpdate }: {
       )}>
         Gym Session
       </span>
-      {log.gym && <span className="text-xs text-orange-400 font-bold">✓ Done</span>}
+      <span className="text-[10px] text-orange-400 bg-orange-950/60 border border-orange-900 px-2 py-0.5 rounded-full font-bold">3x/week</span>
     </div>
   )
 }

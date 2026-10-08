@@ -8,6 +8,7 @@ export const CHALLENGE_DAYS = 75
 export const DEFAULT_START_DATE = '2026-10-09'
 export const TIMEZONE = 'Asia/Kolkata'
 export const GYM_REQUIRED_PER_WEEK = 3
+export const RUNNING_REQUIRED_PER_WEEK = 3
 
 // ─── Date utilities ──────────────────────────────────────────
 
@@ -68,7 +69,7 @@ export function formatDisplayDate(dateStr: string): string {
 
 // ─── Week utilities ──────────────────────────────────────────
 
-/** Returns 0-indexed week number (0 = days 1-7, 1 = days 8-14, ...) */
+/** Returns 0-indexed week number (0 = days 1-7, 1 = days 8-14, ...) based on challenge start date */
 export function getWeekIndex(dayNumber: number): number {
   const safeDay = Math.max(1, dayNumber)
   return Math.floor((safeDay - 1) / 7)
@@ -121,13 +122,13 @@ export function isTaskDone(key: string, log: DailyLog): boolean {
 
 /**
  * Whether all required enabled tasks are done for a day.
- * Gym is NOT included in per-day completion (handled weekly).
+ * Gym and Running are NOT included in per-day completion (both follow 3x/week rule).
  */
 export function isDayComplete(log: DailyLog, taskConfig: TaskConfig[]): boolean {
   const isMatch = log.day_type === 'match'
   const required = taskConfig.filter(t => {
     if (!t.enabled) return false
-    if (t.key === 'gym') return false
+    if (t.key === 'gym' || t.key === 'running') return false // weekly rules
     if (isMatch) return t.required_on_match
     return true
   })
@@ -146,7 +147,7 @@ export function getDayCompletionPercent(log: DailyLog, taskConfig: TaskConfig[])
   const isMatch = log.day_type === 'match'
   const required = taskConfig.filter(t => {
     if (!t.enabled) return false
-    if (t.key === 'gym') return false
+    if (t.key === 'gym' || t.key === 'running') return false
     if (isMatch) return t.required_on_match
     return true
   })
@@ -160,18 +161,26 @@ export function getDayCompletionPercent(log: DailyLog, taskConfig: TaskConfig[])
   return Math.round((done / totalTasks) * 100)
 }
 
-// ─── Gym weekly tracking ─────────────────────────────────────
+// ─── Weekly tracking (Gym & Running) ─────────────────────────
 
-export interface GymStatus {
+export interface WeeklyTaskStatus {
   completed: number
   needed: number
   isUrgent: boolean
   failed: boolean
 }
 
-export function getGymStatus(weekLogs: DailyLog[], daysRemainingInWeek: number): GymStatus {
+export function getGymStatus(weekLogs: DailyLog[], daysRemainingInWeek: number): WeeklyTaskStatus {
   const completed = weekLogs.filter(l => l.gym).length
   const needed = Math.max(0, GYM_REQUIRED_PER_WEEK - completed)
+  const failed = needed > daysRemainingInWeek
+  const isUrgent = needed > 0 && needed >= daysRemainingInWeek && !failed
+  return { completed, needed, isUrgent, failed }
+}
+
+export function getRunningStatus(weekLogs: DailyLog[], daysRemainingInWeek: number): WeeklyTaskStatus {
+  const completed = weekLogs.filter(l => l.tasks['running']).length
+  const needed = Math.max(0, RUNNING_REQUIRED_PER_WEEK - completed)
   const failed = needed > daysRemainingInWeek
   const isUrgent = needed > 0 && needed >= daysRemainingInWeek && !failed
   return { completed, needed, isUrgent, failed }
@@ -244,12 +253,24 @@ export function checkForFailure(
       const log = logMap.get(getDateForDay(startDate, day))
       if (log) weekLogs.push(log)
     }
+
+    // Check 3x Gym rule
     const gymCount = weekLogs.filter(l => l.gym).length
     if (gymCount < GYM_REQUIRED_PER_WEEK) {
       return {
         failed: true,
         failedOnDay: endDay,
         reason: `Week ${weekIdx + 1} had only ${gymCount}/${GYM_REQUIRED_PER_WEEK} gym days`,
+      }
+    }
+
+    // Check 3x Running rule
+    const runningCount = weekLogs.filter(l => l.tasks['running']).length
+    if (runningCount < RUNNING_REQUIRED_PER_WEEK) {
+      return {
+        failed: true,
+        failedOnDay: endDay,
+        reason: `Week ${weekIdx + 1} had only ${runningCount}/${RUNNING_REQUIRED_PER_WEEK} running days`,
       }
     }
   }
@@ -318,6 +339,7 @@ export interface ChallengeStats {
   totalWaterML: number
   avgSleepHours: number
   totalGymDays: number
+  totalRunningDays: number
 }
 
 export function aggregateStats(
@@ -339,6 +361,7 @@ export function aggregateStats(
       ? sleepLogs.reduce((s, l) => s + Number(l.sleep_hours), 0) / sleepLogs.length
       : 0,
     totalGymDays: logs.filter(l => l.gym).length,
+    totalRunningDays: logs.filter(l => l.tasks['running']).length,
   }
 }
 
