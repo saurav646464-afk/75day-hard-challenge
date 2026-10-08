@@ -41,9 +41,10 @@ export function diffDays(dateA: string, dateB: string): number {
   return Math.round((b - a) / 86_400_000)
 }
 
-/** Returns 1-based day number for a given date (1 = start_date) */
+/** Returns 1-based day number for a given date (1 = start_date). Clamped to at least 1. */
 export function getDayNumber(startDate: string, forDate: string): number {
-  return diffDays(startDate, forDate) + 1
+  const raw = diffDays(startDate, forDate) + 1
+  return Math.max(1, raw)
 }
 
 /** Returns the YYYY-MM-DD for day N of the challenge */
@@ -56,7 +57,7 @@ export function isSunday(dateStr: string): boolean {
   return parseDate(dateStr).getDay() === 0
 }
 
-/** Format date for display: "Thu, 9 Oct" */
+/** Format date for display: "Thu, 8 Oct" */
 export function formatDisplayDate(dateStr: string): string {
   return parseDate(dateStr).toLocaleDateString('en-IN', {
     weekday: 'short',
@@ -69,7 +70,8 @@ export function formatDisplayDate(dateStr: string): string {
 
 /** Returns 0-indexed week number (0 = days 1-7, 1 = days 8-14, ...) */
 export function getWeekIndex(dayNumber: number): number {
-  return Math.floor((dayNumber - 1) / 7)
+  const safeDay = Math.max(1, dayNumber)
+  return Math.floor((safeDay - 1) / 7)
 }
 
 /** Returns [startDay, endDay] (inclusive, 1-based) for a given 0-indexed week */
@@ -83,7 +85,7 @@ export function getWeekDayRange(weekIndex: number): [number, number] {
 export function getDaysRemainingInWeek(dayNumber: number): number {
   const weekIdx = getWeekIndex(dayNumber)
   const [, endDay] = getWeekDayRange(weekIdx)
-  return endDay - dayNumber + 1
+  return endDay - Math.max(1, dayNumber) + 1
 }
 
 // ─── Task completion checks ──────────────────────────────────
@@ -125,7 +127,7 @@ export function isDayComplete(log: DailyLog, taskConfig: TaskConfig[]): boolean 
   const isMatch = log.day_type === 'match'
   const required = taskConfig.filter(t => {
     if (!t.enabled) return false
-    if (t.key === 'gym') return false // gym = weekly rule
+    if (t.key === 'gym') return false
     if (isMatch) return t.required_on_match
     return true
   })
@@ -134,7 +136,6 @@ export function isDayComplete(log: DailyLog, taskConfig: TaskConfig[]): boolean 
     if (!isTaskDone(task.key, log)) return false
   }
 
-  // Match day also needs the "match_played" checkbox
   if (isMatch && !log.tasks['match_played']) return false
 
   return true
@@ -150,7 +151,6 @@ export function getDayCompletionPercent(log: DailyLog, taskConfig: TaskConfig[])
     return true
   })
 
-  // Add match_played for match days
   const totalTasks = required.length + (isMatch ? 1 : 0)
   if (totalTasks === 0) return 100
 
@@ -179,7 +179,6 @@ export function getGymStatus(weekLogs: DailyLog[], daysRemainingInWeek: number):
 
 // ─── Streak calculation ──────────────────────────────────────
 
-/** Count consecutive completed days ending at (and including) today */
 export function calculateCurrentStreak(
   logs: DailyLog[],
   startDate: string,
@@ -200,7 +199,6 @@ export function calculateCurrentStreak(
   return streak
 }
 
-/** Best consecutive completed day streak ever */
 export function calculateBestStreak(logs: DailyLog[]): number {
   const sorted = [...logs].sort((a, b) => a.log_date.localeCompare(b.log_date))
   let best = 0, current = 0
@@ -219,11 +217,6 @@ export interface FailResult {
   reason?: string
 }
 
-/**
- * Checks the active attempt for failure conditions:
- * 1. Any past day not completed
- * 2. Any past complete week with < 3 gym days
- */
 export function checkForFailure(
   attempt: Attempt,
   logs: DailyLog[],
@@ -233,7 +226,6 @@ export function checkForFailure(
   const startDate = attempt.start_date
   const todayDayNum = getDayNumber(startDate, today)
 
-  // Only check days before today
   const daysToCheck = Math.min(todayDayNum - 1, CHALLENGE_DAYS)
 
   for (let day = 1; day <= daysToCheck; day++) {
@@ -244,7 +236,6 @@ export function checkForFailure(
     }
   }
 
-  // Check fully-completed weeks for gym rule
   const completedWeeks = Math.floor((todayDayNum - 1) / 7)
   for (let weekIdx = 0; weekIdx < completedWeeks; weekIdx++) {
     const [startDay, endDay] = getWeekDayRange(weekIdx)
@@ -268,7 +259,6 @@ export function checkForFailure(
 
 // ─── Sunday check-in ─────────────────────────────────────────
 
-/** Is a weekly check-in required? (Sundays, except match days) */
 export function isCheckinRequired(dateStr: string, log: DailyLog | undefined): boolean {
   if (!isSunday(dateStr)) return false
   return log?.day_type !== 'match'
@@ -310,7 +300,9 @@ export const MOTIVATIONAL_QUOTES = [
 ] as const
 
 export function getDailyQuote(dayNumber: number): string {
-  return MOTIVATIONAL_QUOTES[(dayNumber - 1) % MOTIVATIONAL_QUOTES.length]
+  const safeDay = Math.max(1, Math.abs(dayNumber || 1))
+  const idx = (safeDay - 1) % MOTIVATIONAL_QUOTES.length
+  return MOTIVATIONAL_QUOTES[idx] || MOTIVATIONAL_QUOTES[0]
 }
 
 // ─── Stats aggregation ───────────────────────────────────────
@@ -350,9 +342,6 @@ export function aggregateStats(
   }
 }
 
-// ─── Can edit yesterday? ─────────────────────────────────────
-
-/** Yesterday is editable until 11:59 AM today (IST) */
 export function canEditYesterday(today: string): boolean {
   const now = new Date()
   const istHour = parseInt(
@@ -364,10 +353,9 @@ export function canEditYesterday(today: string): boolean {
   return istHour < 11 || (istHour === 11 && istMinute < 59)
 }
 
-/** Is a past date editable? (only yesterday, until 11:59 AM) */
 export function isDateEditable(dateStr: string, today: string): boolean {
   const diff = diffDays(dateStr, today)
-  if (diff === 0) return true // today is always editable
-  if (diff === 1) return canEditYesterday(today) // yesterday until 11:59 AM
+  if (diff === 0) return true
+  if (diff === 1) return canEditYesterday(today)
   return false
 }
