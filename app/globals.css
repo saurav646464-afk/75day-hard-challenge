@@ -1,0 +1,303 @@
+@import "tailwindcss";
+
+:root {
+  --color-emerald: #10b981;
+  --color-orange: #f97316;
+  --color-bg: #09090b;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+body {
+  height: 100dvh;
+  overflow: hidden;
+  background-color: #09090b;
+}
+
+/* Prevent iOS Safari zoom on input focus */
+input, select, textarea {
+  font-size: 16px !important;
+}
+
+/* Smooth scrolling */
+@media (prefers-reduced-motion: no-preference) {
+  * {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Main app shell */
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  max-width: 480px;
+  margin: 0 auto;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Scrollable main content area */
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  padding-bottom: calc(80px + var(--safe-bottom));
+}
+
+/* Bottom tab bar */
+.bottom-tab-bar {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  padding-bottom: var(--safe-bottom);
+  background: #18181b;
+  border-top: 1px solid #27272a;
+  z-index: 50;
+}
+
+/* Bottom sheet overlay */
+.bottom-sheet-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 100;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.bottom-sheet {
+  width: 100%;
+  max-width: 480px;
+  background: #18181b;
+  border-radius: 20px 20px 0 0;
+  padding-bottom: calc(24px + var(--safe-bottom));
+  max-height: 90dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* Progress ring */
+.progress-ring-circle {
+  transition: stroke-dashoffset 0.3s ease;
+  transform-origin: center;
+  transform: rotate(-90deg);
+}
+
+/* Skeleton loading */
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.skeleton {
+  animation: skeleton-pulse 2s ease-in-out infinite;
+  background: #27272a;
+  border-radius: 8px;
+}
+
+/* Slide-up animation for bottom sheet */
+@keyframes slide-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.sheet-enter {
+  animation: slide-up 0.25s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* Fade in for toasts */
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.toast-enter {
+  animation: fade-in-up 0.2s ease;
+}
+
+/* Task row tap feedback */
+.task-row {
+  transition: background-color 0.15s ease;
+  min-height: 56px;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.task-row:active {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Toggle switch */
+.toggle-switch {
+  width: 52px;
+  height: 28px;
+  border-radius: 14px;
+  transition: background-color 0.2s;
+  position: relative;
+  cursor: pointer;
+}
+
+.toggle-switch::after {
+  content: '';
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: white;
+  top: 3px;
+  left: 3px;
+  transition: transform 0.2s;
+}
+
+.toggle-switch.on::after {
+  transform: translateX(24px);
+}
+
+/* Water progress gradient */
+.water-bar {
+  background: linear-gradient(90deg, #3b82f6 0%, #0ea5e9 100%);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+/* Meal circles */
+.meal-circle {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 2px solid #3f3f46;
+  transition: all 0.15s ease;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.meal-circle.filled {
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.15);
+}
+
+/* Calendar day box */
+.cal-day {
+  aspect-ratio: 1;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  min-height: 40px;
+}
+
+/* Scroll snap for swipe between days */
+.day-scroll-container {
+  scroll-snap-type: x mandatory;
+  overflow-x: auto;
+  display: flex;
+  scrollbar-width: none;
+}
+
+.day-scroll-container::-webkit-scrollbar {
+  display: none;
+}
+
+.day-scroll-item {
+  scroll-snap-align: start;
+  flex-shrink: 0;
+  width: 100%;
+}
+
+/* Stepper buttons - large for thumb use */
+.stepper-btn {
+  min-width: 48px;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  font-size: 20px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.1s;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.stepper-btn:active {
+  transform: scale(0.93);
+}
+
+/* Chip quick-add buttons */
+.chip {
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.1s;
+  border: 1px solid #3f3f46;
+  background: #27272a;
+  white-space: nowrap;
+  min-height: 36px;
+}
+
+.chip:active {
+  transform: scale(0.95);
+  background: #3f3f46;
+}
+
+/* Offline badge */
+.offline-badge {
+  position: fixed;
+  top: calc(var(--safe-top) + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #ca8a04;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  z-index: 200;
+  white-space: nowrap;
+}
+
+/* Confetti overlay */
+.confetti-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 300;
+}
+
+/* Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *, .progress-ring-circle, .sheet-enter, .toast-enter {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
