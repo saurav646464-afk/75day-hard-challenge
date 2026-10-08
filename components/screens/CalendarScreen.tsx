@@ -3,7 +3,7 @@
 import React, { useState } from 'react'
 import { useApp } from '@/components/AppProvider'
 import {
-  getDayNumber, getDateForDay, CHALLENGE_DAYS, formatDisplayDate, diffDays
+  getDayNumber, getDateForDay, CHALLENGE_DAYS, formatDisplayDate, diffDays, parseDate
 } from '@/lib/challenge'
 import { cn } from '@/lib/utils'
 
@@ -14,6 +14,10 @@ export default function CalendarScreen({ onDayTap }: { onDayTap: (day: number) =
   if (!attempt) return <div className="p-6 text-zinc-400">No active attempt</div>
 
   const logMap = new Map(allLogs.map(l => [l.log_date, l]))
+
+  // Calculate day of week offset for the start date (Mo=0, Tu=1, ..., Fr=4, Sa=5, Su=6)
+  const startJsDay = parseDate(attempt.start_date).getDay()
+  const startOffset = (startJsDay + 6) % 7
 
   const getDayStatus = (day: number) => {
     const date = getDateForDay(attempt.start_date, day)
@@ -51,15 +55,21 @@ export default function CalendarScreen({ onDayTap }: { onDayTap: (day: number) =
         ))}
       </div>
 
-      {/* Week day headers */}
+      {/* Weekday column headers (Mo to Su) */}
       <div className="grid grid-cols-7 gap-1">
         {['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'].map(d => (
           <div key={d} className="text-center text-xs text-orange-500 font-bold py-1">{d}</div>
         ))}
       </div>
 
-      {/* 75 day grid */}
+      {/* 75 day grid aligned to actual calendar weekdays */}
       <div className="grid grid-cols-7 gap-1.5">
+        {/* Empty padding slots to align Day 1 under its actual weekday */}
+        {Array.from({ length: startOffset }).map((_, i) => (
+          <div key={`empty-${i}`} className="cal-day opacity-0 pointer-events-none" />
+        ))}
+
+        {/* Day 1 to 75 */}
         {Array.from({ length: CHALLENGE_DAYS }, (_, i) => {
           const day = i + 1
           const date = getDateForDay(attempt.start_date, day)
@@ -95,12 +105,12 @@ export default function CalendarScreen({ onDayTap }: { onDayTap: (day: number) =
         })}
       </div>
 
-      {/* Day details */}
+      {/* Selected day details card */}
       {selectedDay && (
         <div className="mt-4 p-4 bg-zinc-900 rounded-2xl border border-zinc-800">
           <div className="flex items-center justify-between mb-2">
             <span className="font-bold text-white text-lg">Day {selectedDay}</span>
-            <span className="text-sm text-zinc-400">
+            <span className="text-sm font-semibold text-orange-400">
               {formatDisplayDate(getDateForDay(attempt.start_date, selectedDay))}
             </span>
           </div>
