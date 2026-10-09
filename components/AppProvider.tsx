@@ -135,7 +135,25 @@ export function AppProvider({ children, userId }: { children: React.ReactNode; u
         .order('sort_order')
 
       if (tasksData && tasksData.length > 0) {
-        setTaskConfig(tasksData)
+        // Auto-sync default labels if rules were updated
+        const defaultLabels: Record<string, string> = {
+          batting: 'Batting - 500+ balls',
+          keeping: 'Wicket Keeping - 200+ (5x/week)',
+          catching: 'Fielding Catching - 100+ (5x/week)',
+          running: 'Running / Sprints (3x/week)',
+          gym: 'Gym (3x per week)',
+        }
+
+        const updatedTasks = tasksData.map(t => {
+          if (!t.is_custom && defaultLabels[t.key] && t.label !== defaultLabels[t.key]) {
+            const updated = { ...t, label: defaultLabels[t.key] }
+            void supabase.from('task_config').update({ label: defaultLabels[t.key] }).eq('id', t.id)
+            return updated
+          }
+          return t
+        })
+
+        setTaskConfig(updatedTasks)
       } else {
         // Seed defaults
         const defaultTasks = getDefaultTaskConfig(userId)
