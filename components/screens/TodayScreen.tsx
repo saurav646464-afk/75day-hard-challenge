@@ -4,9 +4,12 @@ import React, { useEffect, useRef, useState } from 'react'
 import { useApp } from '@/components/AppProvider'
 import {
   getDailyQuote, getDayNumber, getWeekIndex, getWeekDayRange, getDateForDay,
-  getGymStatus, getRunningStatus, getDaysRemainingInWeek, isSunday,
+  getGymStatus, getRunningStatus, getKeepingStatus, getCatchingStatus,
+  getDaysRemainingInWeek, isSunday,
   isWaterDone, isSleepDone, isMealsDone, isTaskDone, getDayCompletionPercent, formatDisplayDate,
-  CHALLENGE_DAYS, GYM_REQUIRED_PER_WEEK, RUNNING_REQUIRED_PER_WEEK, isCheckinRequired, addDays
+  CHALLENGE_DAYS, GYM_REQUIRED_PER_WEEK, RUNNING_REQUIRED_PER_WEEK,
+  KEEPING_REQUIRED_PER_WEEK, CATCHING_REQUIRED_PER_WEEK, BATTING_TARGET_BALLS,
+  isCheckinRequired, addDays
 } from '@/lib/challenge'
 import { cn, haptic, celebrateCompletion, formatWater } from '@/lib/utils'
 import { ChevronLeft, ChevronRight, Check, Flame, Dumbbell, Droplets, Moon, BookOpen, AlertTriangle } from 'lucide-react'
@@ -62,6 +65,8 @@ export default function TodayScreen() {
   const daysRemaining = getDaysRemainingInWeek(dayNum)
   const gymStatus = getGymStatus(weekLogs, daysRemaining)
   const runningStatus = getRunningStatus(weekLogs, daysRemaining)
+  const keepingStatus = getKeepingStatus(weekLogs, daysRemaining)
+  const catchingStatus = getCatchingStatus(weekLogs, daysRemaining)
 
   const quote = getDailyQuote(todayDayNum)
 
@@ -184,6 +189,7 @@ export default function TodayScreen() {
         </div>
       )}
 
+      {/* Warning alerts */}
       {gymStatus.isUrgent && isToday && (
         <div className="mx-4 mt-4 p-3 rounded-xl bg-red-950/40 border border-red-500/40 flex items-center gap-2">
           <AlertTriangle size={18} className="text-red-400 flex-shrink-0" />
@@ -202,37 +208,81 @@ export default function TodayScreen() {
         </div>
       )}
 
+      {keepingStatus.isUrgent && isToday && (
+        <div className="mx-4 mt-4 p-3 rounded-xl bg-red-950/40 border border-red-500/40 flex items-center gap-2">
+          <AlertTriangle size={18} className="text-red-400 flex-shrink-0" />
+          <span className="text-sm text-red-300 font-bold">
+            Keeping karna zaroori hai aaj! ({keepingStatus.needed} sessions remaining)
+          </span>
+        </div>
+      )}
+
+      {catchingStatus.isUrgent && isToday && (
+        <div className="mx-4 mt-4 p-3 rounded-xl bg-red-950/40 border border-red-500/40 flex items-center gap-2">
+          <AlertTriangle size={18} className="text-red-400 flex-shrink-0" />
+          <span className="text-sm text-red-300 font-bold">
+            Catching karna zaroori hai aaj! ({catchingStatus.needed} sessions remaining)
+          </span>
+        </div>
+      )}
+
       <div className="px-4 pt-4 pb-6 space-y-5">
         {/* Quote */}
         <div className="p-4 rounded-2xl bg-zinc-900 border border-zinc-800">
           <p className="text-sm text-zinc-200 italic leading-relaxed">&ldquo;{quote}&rdquo;</p>
         </div>
 
-        {/* Weekly summary cards (Gym & Running 3x/week) */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-zinc-900 border border-zinc-800">
-            <div className="flex items-center gap-2">
-              <Dumbbell size={16} className="text-orange-500" />
-              <span className="text-xs font-semibold text-white">Gym this week</span>
+        {/* Weekly summary cards */}
+        <div className="grid grid-cols-2 gap-2.5">
+          <div className="flex items-center justify-between p-3 rounded-2xl bg-zinc-900 border border-zinc-800">
+            <div className="flex items-center gap-1.5">
+              <Dumbbell size={15} className="text-orange-500" />
+              <span className="text-xs font-semibold text-white">Gym</span>
             </div>
             <div className={cn(
-              'font-black text-sm',
+              'font-black text-xs',
               gymStatus.completed >= GYM_REQUIRED_PER_WEEK ? 'text-orange-400' : 'text-white'
             )}>
               {gymStatus.completed}/{GYM_REQUIRED_PER_WEEK}
             </div>
           </div>
 
-          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-zinc-900 border border-zinc-800">
-            <div className="flex items-center gap-2">
-              <Flame size={16} className="text-orange-500" />
+          <div className="flex items-center justify-between p-3 rounded-2xl bg-zinc-900 border border-zinc-800">
+            <div className="flex items-center gap-1.5">
+              <Flame size={15} className="text-orange-500" />
               <span className="text-xs font-semibold text-white">Running</span>
             </div>
             <div className={cn(
-              'font-black text-sm',
+              'font-black text-xs',
               runningStatus.completed >= RUNNING_REQUIRED_PER_WEEK ? 'text-orange-400' : 'text-white'
             )}>
               {runningStatus.completed}/{RUNNING_REQUIRED_PER_WEEK}
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between p-3 rounded-2xl bg-zinc-900 border border-zinc-800">
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs">🧤</span>
+              <span className="text-xs font-semibold text-white">Keeping</span>
+            </div>
+            <div className={cn(
+              'font-black text-xs',
+              keepingStatus.completed >= KEEPING_REQUIRED_PER_WEEK ? 'text-orange-400' : 'text-white'
+            )}>
+              {keepingStatus.completed}/{KEEPING_REQUIRED_PER_WEEK}
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between p-3 rounded-2xl bg-zinc-900 border border-zinc-800">
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs">⚾</span>
+              <span className="text-xs font-semibold text-white">Catching</span>
+            </div>
+            <div className={cn(
+              'font-black text-xs',
+              catchingStatus.completed >= CATCHING_REQUIRED_PER_WEEK ? 'text-orange-400' : 'text-white'
+            )}>
+              {catchingStatus.completed}/{CATCHING_REQUIRED_PER_WEEK}
             </div>
           </div>
         </div>
@@ -243,7 +293,7 @@ export default function TodayScreen() {
             <BallCountTask
               label="Batting"
               value={log.batting_balls}
-              target={1000}
+              target={BATTING_TARGET_BALLS}
               chips={[50, 100, 200]}
               onChange={v => updateTodayLog({ batting_balls: v })}
               disabled={!canEdit}
@@ -253,6 +303,7 @@ export default function TodayScreen() {
               value={log.keeping_balls}
               target={200}
               chips={[25, 50]}
+              badge="5x/week"
               onChange={v => updateTodayLog({ keeping_balls: v })}
               disabled={!canEdit}
             />
@@ -261,6 +312,7 @@ export default function TodayScreen() {
               value={log.catching_balls}
               target={100}
               chips={[10, 25]}
+              badge="5x/week"
               onChange={v => updateTodayLog({ catching_balls: v })}
               disabled={!canEdit}
             />
@@ -372,10 +424,10 @@ function SimpleTask({
 }
 
 function BallCountTask({
-  label, value, target, chips, onChange, disabled
+  label, value, target, chips, onChange, disabled, badge
 }: {
   label: string; value: number; target: number; chips: number[]
-  onChange: (v: number) => void; disabled: boolean
+  onChange: (v: number) => void; disabled: boolean; badge?: string
 }) {
   const done = value >= target
   const pct = Math.min(100, Math.round((value / target) * 100))
@@ -393,6 +445,9 @@ function BallCountTask({
           <span className={cn('text-[16px] font-semibold', done ? 'text-zinc-500 line-through' : 'text-white')}>
             {label}
           </span>
+          {badge && (
+            <span className="text-[10px] text-orange-400 bg-orange-950/60 border border-orange-900 px-2 py-0.5 rounded-full font-bold">{badge}</span>
+          )}
         </div>
         <span className={cn('text-sm font-bold', done ? 'text-orange-400' : 'text-zinc-400')}>
           {value}/{target}

@@ -9,6 +9,9 @@ export const DEFAULT_START_DATE = '2026-10-09'
 export const TIMEZONE = 'Asia/Kolkata'
 export const GYM_REQUIRED_PER_WEEK = 3
 export const RUNNING_REQUIRED_PER_WEEK = 3
+export const KEEPING_REQUIRED_PER_WEEK = 5
+export const CATCHING_REQUIRED_PER_WEEK = 5
+export const BATTING_TARGET_BALLS = 500
 
 // ─── Date utilities ──────────────────────────────────────────
 
@@ -91,7 +94,7 @@ export function getDaysRemainingInWeek(dayNumber: number): number {
 
 // ─── Task completion checks ──────────────────────────────────
 
-export const isBattingDone  = (balls: number) => balls >= 1000
+export const isBattingDone  = (balls: number) => balls >= BATTING_TARGET_BALLS // minimum 500 balls
 export const isKeepingDone  = (balls: number) => balls >= 200
 export const isCatchingDone = (balls: number) => balls >= 100
 export const isWaterDone    = (ml: number)    => ml >= 4000
@@ -122,13 +125,14 @@ export function isTaskDone(key: string, log: DailyLog): boolean {
 
 /**
  * Whether all required enabled tasks are done for a day.
- * Gym and Running are NOT included in per-day completion (both follow 3x/week rule).
+ * Gym (3x), Running (3x), Keeping (5x), and Catching (5x) follow weekly rules so they don't block per-day completion.
  */
 export function isDayComplete(log: DailyLog, taskConfig: TaskConfig[]): boolean {
   const isMatch = log.day_type === 'match'
+  const weeklyKeys = ['gym', 'running', 'keeping', 'catching']
   const required = taskConfig.filter(t => {
     if (!t.enabled) return false
-    if (t.key === 'gym' || t.key === 'running') return false // weekly rules
+    if (weeklyKeys.includes(t.key)) return false // weekly rules
     if (isMatch) return t.required_on_match
     return true
   })
@@ -145,9 +149,10 @@ export function isDayComplete(log: DailyLog, taskConfig: TaskConfig[]): boolean 
 /** Returns 0–100 completion percentage for a day */
 export function getDayCompletionPercent(log: DailyLog, taskConfig: TaskConfig[]): number {
   const isMatch = log.day_type === 'match'
+  const weeklyKeys = ['gym', 'running', 'keeping', 'catching']
   const required = taskConfig.filter(t => {
     if (!t.enabled) return false
-    if (t.key === 'gym' || t.key === 'running') return false
+    if (weeklyKeys.includes(t.key)) return false
     if (isMatch) return t.required_on_match
     return true
   })
@@ -161,7 +166,7 @@ export function getDayCompletionPercent(log: DailyLog, taskConfig: TaskConfig[])
   return Math.round((done / totalTasks) * 100)
 }
 
-// ─── Weekly tracking (Gym & Running) ─────────────────────────
+// ─── Weekly tracking (Gym, Running, Keeping, Catching) ───────
 
 export interface WeeklyTaskStatus {
   completed: number
@@ -181,6 +186,22 @@ export function getGymStatus(weekLogs: DailyLog[], daysRemainingInWeek: number):
 export function getRunningStatus(weekLogs: DailyLog[], daysRemainingInWeek: number): WeeklyTaskStatus {
   const completed = weekLogs.filter(l => l.tasks['running']).length
   const needed = Math.max(0, RUNNING_REQUIRED_PER_WEEK - completed)
+  const failed = needed > daysRemainingInWeek
+  const isUrgent = needed > 0 && needed >= daysRemainingInWeek && !failed
+  return { completed, needed, isUrgent, failed }
+}
+
+export function getKeepingStatus(weekLogs: DailyLog[], daysRemainingInWeek: number): WeeklyTaskStatus {
+  const completed = weekLogs.filter(l => isKeepingDone(l.keeping_balls)).length
+  const needed = Math.max(0, KEEPING_REQUIRED_PER_WEEK - completed)
+  const failed = needed > daysRemainingInWeek
+  const isUrgent = needed > 0 && needed >= daysRemainingInWeek && !failed
+  return { completed, needed, isUrgent, failed }
+}
+
+export function getCatchingStatus(weekLogs: DailyLog[], daysRemainingInWeek: number): WeeklyTaskStatus {
+  const completed = weekLogs.filter(l => isCatchingDone(l.catching_balls)).length
+  const needed = Math.max(0, CATCHING_REQUIRED_PER_WEEK - completed)
   const failed = needed > daysRemainingInWeek
   const isUrgent = needed > 0 && needed >= daysRemainingInWeek && !failed
   return { completed, needed, isUrgent, failed }
@@ -273,6 +294,26 @@ export function checkForFailure(
         reason: `Week ${weekIdx + 1} had only ${runningCount}/${RUNNING_REQUIRED_PER_WEEK} running days`,
       }
     }
+
+    // Check 5x Keeping rule
+    const keepingCount = weekLogs.filter(l => isKeepingDone(l.keeping_balls)).length
+    if (keepingCount < KEEPING_REQUIRED_PER_WEEK) {
+      return {
+        failed: true,
+        failedOnDay: endDay,
+        reason: `Week ${weekIdx + 1} had only ${keepingCount}/${KEEPING_REQUIRED_PER_WEEK} keeping days`,
+      }
+    }
+
+    // Check 5x Catching rule
+    const catchingCount = weekLogs.filter(l => isCatchingDone(l.catching_balls)).length
+    if (catchingCount < CATCHING_REQUIRED_PER_WEEK) {
+      return {
+        failed: true,
+        failedOnDay: endDay,
+        reason: `Week ${weekIdx + 1} had only ${catchingCount}/${CATCHING_REQUIRED_PER_WEEK} catching days`,
+      }
+    }
   }
 
   return { failed: false }
@@ -307,7 +348,7 @@ export const MOTIVATIONAL_QUOTES = [
   "A cricketer's greatest opponent is themselves.",
   "No shortcut reaches the crease before you.",
   "Pressure is a privilege — only the prepared feel it.",
-  "1000 balls a day separates the good from the great.",
+  "500 balls a day separates the good from the great.",
   "Your worst training day beats your best excuse.",
   "Mental fitness wins the match when the physical is equal.",
   "Every drop of water, every ball faced — it compounds.",
@@ -315,7 +356,7 @@ export const MOTIVATIONAL_QUOTES = [
   "Play every day like your spot in the team depends on it.",
   "Nutrition is part of your batting average.",
   "Sleep is the cheapest performance enhancer.",
-  "Videsh mein bhi, wahi 1000 balls.",
+  "Videsh mein bhi, wahi 500 balls.",
   "Jab dil kare rest karne ka, tab aur karo.",
   "75 din ka dard, lifetime ki pehchaan.",
 ] as const
@@ -340,6 +381,8 @@ export interface ChallengeStats {
   avgSleepHours: number
   totalGymDays: number
   totalRunningDays: number
+  totalKeepingDays: number
+  totalCatchingDays: number
 }
 
 export function aggregateStats(
@@ -362,6 +405,8 @@ export function aggregateStats(
       : 0,
     totalGymDays: logs.filter(l => l.gym).length,
     totalRunningDays: logs.filter(l => l.tasks['running']).length,
+    totalKeepingDays: logs.filter(l => isKeepingDone(l.keeping_balls)).length,
+    totalCatchingDays: logs.filter(l => isCatchingDone(l.catching_balls)).length,
   }
 }
 
