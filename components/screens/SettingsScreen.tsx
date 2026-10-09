@@ -62,14 +62,38 @@ export default function SettingsScreen() {
     if (!task) return
     const updated = { ...task, enabled: !task.enabled }
     setTasks(prev => prev.map(t => t.key === key ? updated : t))
-    await supabase.from('task_config').update({ enabled: updated.enabled }).eq('id', task.id)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    if (task.id) {
+      await supabase.from('task_config').update({ enabled: updated.enabled }).eq('id', task.id)
+    } else {
+      await supabase.from('task_config').upsert({
+        user_id: user.id,
+        key: task.key,
+        label: task.label,
+        enabled: updated.enabled,
+        required_on_match: task.required_on_match,
+        is_custom: task.is_custom,
+        sort_order: task.sort_order,
+      }, { onConflict: 'user_id,key' })
+    }
+    await refetch()
   }
 
   async function deleteTask(key: string) {
     const task = tasks.find(t => t.key === key)
     if (!task || !task.is_custom) return
     setTasks(prev => prev.filter(t => t.key !== key))
-    await supabase.from('task_config').delete().eq('id', task.id)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    if (task.id) {
+      await supabase.from('task_config').delete().eq('id', task.id)
+    } else {
+      await supabase.from('task_config').delete().eq('user_id', user.id).eq('key', key)
+    }
+    await refetch()
   }
 
   async function addCustomTask() {
@@ -86,10 +110,11 @@ export default function SettingsScreen() {
       is_custom: true,
       sort_order: tasks.length + 1,
     }
-    const { data } = await supabase.from('task_config').insert(newTask).select().single()
+    const { data } = await supabase.from('task_config').upsert(newTask, { onConflict: 'user_id,key' }).select().single()
     if (data) setTasks(prev => [...prev, data as TaskConfig])
     setNewTaskLabel('')
     setShowAddTask(false)
+    await refetch()
   }
 
   async function exportData() {

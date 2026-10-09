@@ -139,8 +139,8 @@ export function AppProvider({ children, userId }: { children: React.ReactNode; u
       } else {
         // Seed defaults
         const defaultTasks = getDefaultTaskConfig(userId)
-        await supabase.from('task_config').insert(defaultTasks)
-        setTaskConfig(defaultTasks as TaskConfig[])
+        const { data: insertedTasks } = await supabase.from('task_config').insert(defaultTasks).select()
+        setTaskConfig(insertedTasks && insertedTasks.length > 0 ? (insertedTasks as TaskConfig[]) : (defaultTasks as TaskConfig[]))
       }
 
       // 3. Active attempt
