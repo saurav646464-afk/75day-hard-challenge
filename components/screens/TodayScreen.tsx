@@ -301,9 +301,8 @@ export default function TodayScreen() {
             <BallCountTask
               label="Wicket Keeping"
               value={log.keeping_balls}
-              target={200}
-              chips={[25, 50]}
-              badge="5x/week"
+              chips={[25, 50, 100]}
+              badge="4x/week"
               onChange={v => updateTodayLog({ keeping_balls: v })}
               disabled={!canEdit}
             />
@@ -426,11 +425,11 @@ function SimpleTask({
 function BallCountTask({
   label, value, target, chips, onChange, disabled, badge
 }: {
-  label: string; value: number; target: number; chips: number[]
+  label: string; value: number; target?: number; chips: number[]
   onChange: (v: number) => void; disabled: boolean; badge?: string
 }) {
-  const done = value >= target
-  const pct = Math.min(100, Math.round((value / target) * 100))
+  const done = target ? value >= target : value > 0
+  const pct = target ? Math.min(100, Math.round((value / target) * 100)) : (value > 0 ? 100 : 0)
 
   return (
     <div className="px-4 py-4">
@@ -450,13 +449,15 @@ function BallCountTask({
           )}
         </div>
         <span className={cn('text-sm font-bold', done ? 'text-orange-400' : 'text-zinc-400')}>
-          {value}/{target}
+          {target ? `${value}/${target}` : `${value} balls`}
         </span>
       </div>
-      <div className="h-2 bg-zinc-800 rounded-full overflow-hidden mb-3">
-        <div className="h-full bg-orange-500 rounded-full transition-all duration-300"
-          style={{ width: `${pct}%` }} />
-      </div>
+      {target && (
+        <div className="h-2 bg-zinc-800 rounded-full overflow-hidden mb-3">
+          <div className="h-full bg-orange-500 rounded-full transition-all duration-300"
+            style={{ width: `${pct}%` }} />
+        </div>
+      )}
       {!disabled && (
         <div className="flex items-center gap-2">
           <button

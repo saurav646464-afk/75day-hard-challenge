@@ -9,7 +9,7 @@ export const DEFAULT_START_DATE = '2026-10-09'
 export const TIMEZONE = 'Asia/Kolkata'
 export const GYM_REQUIRED_PER_WEEK = 3
 export const RUNNING_REQUIRED_PER_WEEK = 3
-export const KEEPING_REQUIRED_PER_WEEK = 5
+export const KEEPING_REQUIRED_PER_WEEK = 4
 export const CATCHING_REQUIRED_PER_WEEK = 5
 export const BATTING_TARGET_BALLS = 500
 
@@ -95,7 +95,7 @@ export function getDaysRemainingInWeek(dayNumber: number): number {
 // ─── Task completion checks ──────────────────────────────────
 
 export const isBattingDone  = (balls: number) => balls >= BATTING_TARGET_BALLS // minimum 500 balls
-export const isKeepingDone  = (balls: number) => balls >= 200
+export const isKeepingDone  = (balls: number) => balls > 0 // any balls logged counts towards keeping day
 export const isCatchingDone = (balls: number) => balls >= 100
 export const isWaterDone    = (ml: number)    => ml >= 4000
 export const isSleepDone    = (hours: number) => hours >= 7
