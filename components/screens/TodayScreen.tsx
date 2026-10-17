@@ -9,7 +9,7 @@ import {
   isWaterDone, isSleepDone, isMealsDone, isTaskDone, getDayCompletionPercent, formatDisplayDate,
   CHALLENGE_DAYS, GYM_REQUIRED_PER_WEEK, RUNNING_REQUIRED_PER_WEEK,
   KEEPING_REQUIRED_PER_WEEK, CATCHING_REQUIRED_PER_WEEK, BATTING_TARGET_BALLS,
-  isCheckinRequired, addDays, diffDays
+  isCheckinRequired, addDays, diffDays, calculateCurrentStreak
 } from '@/lib/challenge'
 import { cn, haptic, celebrateCompletion, formatWater } from '@/lib/utils'
 import { ChevronLeft, ChevronRight, Check, Flame, Dumbbell, Droplets, Moon, BookOpen, AlertTriangle } from 'lucide-react'
@@ -75,20 +75,7 @@ export default function TodayScreen() {
 
   const quote = getDailyQuote(todayDayNum)
 
-  const currentStreak = (() => {
-    let streak = 0
-    let cursor = today
-    const logMap = new Map(allLogs.map(l => [l.log_date, l]))
-    while (true) {
-      const dn = attempt ? getDayNumber(attempt.start_date, cursor) : 0
-      if (dn < 1) break
-      const log = logMap.get(cursor)
-      if (!log?.completed) break
-      streak++
-      cursor = addDays(cursor, -1)
-    }
-    return streak
-  })()
+  const currentStreak = attempt ? calculateCurrentStreak(allLogs, attempt.start_date, today) : 0
 
   const goBack = () => {
     const prev = addDays(viewDate, -1)

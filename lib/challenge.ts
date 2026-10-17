@@ -220,7 +220,11 @@ export function calculateCurrentStreak(
 ): number {
   const logMap = new Map(logs.map(l => [l.log_date, l]))
   let streak = 0
-  let cursor = today
+
+  // If today is completed, count starting from today.
+  // Otherwise, if today is in progress, count consecutive completed days up to yesterday.
+  const todayLog = logMap.get(today)
+  let cursor = (todayLog && todayLog.completed) ? today : addDays(today, -1)
 
   while (true) {
     const dayNum = getDayNumber(startDate, cursor)
