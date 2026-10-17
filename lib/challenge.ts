@@ -237,8 +237,10 @@ export function calculateCurrentStreak(
   return streak
 }
 
-export function calculateBestStreak(logs: DailyLog[]): number {
-  const sorted = [...logs].sort((a, b) => a.log_date.localeCompare(b.log_date))
+export function calculateBestStreak(logs: DailyLog[], startDate?: string): number {
+  const sorted = [...logs]
+    .filter(l => !startDate || l.log_date >= startDate)
+    .sort((a, b) => a.log_date.localeCompare(b.log_date))
   let best = 0, current = 0
   for (const log of sorted) {
     if (log.completed) { current++; best = Math.max(best, current) }
@@ -398,23 +400,24 @@ export function aggregateStats(
   startDate: string,
   today: string
 ): ChallengeStats {
-  const sleepLogs = logs.filter(l => l.sleep_hours > 0)
+  const validLogs = logs.filter(l => l.log_date >= startDate && getDayNumber(startDate, l.log_date) <= CHALLENGE_DAYS)
+  const sleepLogs = validLogs.filter(l => l.sleep_hours > 0)
   return {
-    currentStreak: calculateCurrentStreak(logs, startDate, today),
-    bestStreak: calculateBestStreak(logs),
-    totalDaysCompleted: logs.filter(l => l.completed).length,
-    totalMatchDays: logs.filter(l => l.day_type === 'match' && l.completed).length,
-    totalBattingBalls: logs.reduce((s, l) => s + l.batting_balls, 0),
-    totalKeepingBalls: logs.reduce((s, l) => s + l.keeping_balls, 0),
-    totalCatchingBalls: logs.reduce((s, l) => s + l.catching_balls, 0),
-    totalWaterML: logs.reduce((s, l) => s + l.water_ml, 0),
+    currentStreak: calculateCurrentStreak(validLogs, startDate, today),
+    bestStreak: calculateBestStreak(validLogs, startDate),
+    totalDaysCompleted: validLogs.filter(l => l.completed).length,
+    totalMatchDays: validLogs.filter(l => l.day_type === 'match' && l.completed).length,
+    totalBattingBalls: validLogs.reduce((s, l) => s + l.batting_balls, 0),
+    totalKeepingBalls: validLogs.reduce((s, l) => s + l.keeping_balls, 0),
+    totalCatchingBalls: validLogs.reduce((s, l) => s + l.catching_balls, 0),
+    totalWaterML: validLogs.reduce((s, l) => s + l.water_ml, 0),
     avgSleepHours: sleepLogs.length > 0
       ? sleepLogs.reduce((s, l) => s + Number(l.sleep_hours), 0) / sleepLogs.length
       : 0,
-    totalGymDays: logs.filter(l => l.gym).length,
-    totalRunningDays: logs.filter(l => l.tasks['running']).length,
-    totalKeepingDays: logs.filter(l => isKeepingDone(!!l.tasks['keeping'])).length,
-    totalCatchingDays: logs.filter(l => isCatchingDone(l.catching_balls)).length,
+    totalGymDays: validLogs.filter(l => l.gym).length,
+    totalRunningDays: validLogs.filter(l => l.tasks['running']).length,
+    totalKeepingDays: validLogs.filter(l => isKeepingDone(!!l.tasks['keeping'])).length,
+    totalCatchingDays: validLogs.filter(l => isCatchingDone(l.catching_balls)).length,
   }
 }
 
