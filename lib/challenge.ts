@@ -9,8 +9,8 @@ export const DEFAULT_START_DATE = '2026-10-09'
 export const TIMEZONE = 'Asia/Kolkata'
 export const GYM_REQUIRED_PER_WEEK = 3
 export const RUNNING_REQUIRED_PER_WEEK = 3
-export const KEEPING_REQUIRED_PER_WEEK = 4
-export const CATCHING_REQUIRED_PER_WEEK = 5
+export const KEEPING_REQUIRED_PER_WEEK = 3
+export const CATCHING_REQUIRED_PER_WEEK = 4
 export const BATTING_TARGET_BALLS = 500
 
 // ─── Date utilities ──────────────────────────────────────────
@@ -95,7 +95,7 @@ export function getDaysRemainingInWeek(dayNumber: number): number {
 // ─── Task completion checks ──────────────────────────────────
 
 export const isBattingDone  = (balls: number) => balls >= BATTING_TARGET_BALLS // minimum 500 balls
-export const isKeepingDone  = (balls: number) => balls > 0 // any balls logged counts towards keeping day
+export const isKeepingDone  = (done: boolean) => done // simple tick — no ball tracking
 export const isCatchingDone = (balls: number) => balls >= 100
 export const isWaterDone    = (ml: number)    => ml >= 4000
 export const isSleepDone    = (hours: number) => hours >= 7
@@ -110,7 +110,7 @@ export function isJournalDone(journal: string): boolean {
 export function isTaskDone(key: string, log: DailyLog): boolean {
   switch (key) {
     case 'batting':    return isBattingDone(log.batting_balls)
-    case 'keeping':    return isKeepingDone(log.keeping_balls)
+    case 'keeping':    return isKeepingDone(!!log.tasks['keeping'])
     case 'catching':   return isCatchingDone(log.catching_balls)
     case 'water':      return isWaterDone(log.water_ml)
     case 'sleep':      return isSleepDone(log.sleep_hours)
@@ -125,9 +125,11 @@ export function isTaskDone(key: string, log: DailyLog): boolean {
 
 /**
  * Whether all required enabled tasks are done for a day.
- * Gym (3x), Running (3x), Keeping (5x), and Catching (5x) follow weekly rules so they don't block per-day completion.
+ * Rest days are auto-complete. Gym/Running/Keeping/Catching follow weekly rules so they don't block per-day completion.
  */
 export function isDayComplete(log: DailyLog, taskConfig: TaskConfig[]): boolean {
+  if (log.day_type === 'rest') return true // rest days always count as complete
+
   const isMatch = log.day_type === 'match'
   const weeklyKeys = ['gym', 'running', 'keeping', 'catching']
   const required = taskConfig.filter(t => {
@@ -148,6 +150,8 @@ export function isDayComplete(log: DailyLog, taskConfig: TaskConfig[]): boolean 
 
 /** Returns 0–100 completion percentage for a day */
 export function getDayCompletionPercent(log: DailyLog, taskConfig: TaskConfig[]): number {
+  if (log.day_type === 'rest') return 100 // rest days are 100%
+
   const isMatch = log.day_type === 'match'
   const weeklyKeys = ['gym', 'running', 'keeping', 'catching']
   const required = taskConfig.filter(t => {
@@ -192,7 +196,7 @@ export function getRunningStatus(weekLogs: DailyLog[], daysRemainingInWeek: numb
 }
 
 export function getKeepingStatus(weekLogs: DailyLog[], daysRemainingInWeek: number): WeeklyTaskStatus {
-  const completed = weekLogs.filter(l => isKeepingDone(l.keeping_balls)).length
+  const completed = weekLogs.filter(l => isKeepingDone(!!l.tasks['keeping'])).length
   const needed = Math.max(0, KEEPING_REQUIRED_PER_WEEK - completed)
   const failed = needed > daysRemainingInWeek
   const isUrgent = needed > 0 && needed >= daysRemainingInWeek && !failed
@@ -295,8 +299,8 @@ export function checkForFailure(
       }
     }
 
-    // Check 5x Keeping rule
-    const keepingCount = weekLogs.filter(l => isKeepingDone(l.keeping_balls)).length
+    // Check 3x Keeping rule
+    const keepingCount = weekLogs.filter(l => isKeepingDone(!!l.tasks['keeping'])).length
     if (keepingCount < KEEPING_REQUIRED_PER_WEEK) {
       return {
         failed: true,
@@ -305,7 +309,7 @@ export function checkForFailure(
       }
     }
 
-    // Check 5x Catching rule
+    // Check 4x Catching rule
     const catchingCount = weekLogs.filter(l => isCatchingDone(l.catching_balls)).length
     if (catchingCount < CATCHING_REQUIRED_PER_WEEK) {
       return {
@@ -405,7 +409,7 @@ export function aggregateStats(
       : 0,
     totalGymDays: logs.filter(l => l.gym).length,
     totalRunningDays: logs.filter(l => l.tasks['running']).length,
-    totalKeepingDays: logs.filter(l => isKeepingDone(l.keeping_balls)).length,
+    totalKeepingDays: logs.filter(l => isKeepingDone(!!l.tasks['keeping'])).length,
     totalCatchingDays: logs.filter(l => isCatchingDone(l.catching_balls)).length,
   }
 }

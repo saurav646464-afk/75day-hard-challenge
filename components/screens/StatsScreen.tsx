@@ -79,7 +79,7 @@ export default function StatsScreen() {
         <h3 className="text-xs font-black text-orange-500 uppercase tracking-wider mb-3">🏏 Cricket Volume</h3>
         <div className="space-y-2.5">
           <StatRow label="Batting Balls" value={stats.totalBattingBalls.toLocaleString()} color="text-orange-400" />
-          <StatRow label="Keeping Balls" value={stats.totalKeepingBalls.toLocaleString()} color="text-white" />
+          <StatRow label="Keeping Sessions" value={`${stats.totalKeepingDays} days`} color="text-white" />
           <StatRow label="Catching Balls" value={stats.totalCatchingBalls.toLocaleString()} color="text-white" />
           <StatRow label="Total Water" value={`${(stats.totalWaterML / 1000).toFixed(1)}L`} color="text-orange-400" />
         </div>

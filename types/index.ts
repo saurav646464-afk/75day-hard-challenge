@@ -17,7 +17,7 @@ export interface DailyLog {
   user_id: string
   attempt_id: string
   log_date: string // YYYY-MM-DD
-  day_type: 'normal' | 'match'
+  day_type: 'normal' | 'match' | 'rest'
   tasks: Record<string, boolean>
   batting_balls: number
   keeping_balls: number

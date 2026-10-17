@@ -27,6 +27,7 @@ export default function CalendarScreen({ onDayTap }: { onDayTap: (day: number) =
     if (diff > 0) return 'upcoming'
     if (date === today) return 'today'
     if (log?.completed && log.day_type === 'match') return 'match'
+    if (log?.completed && log.day_type === 'rest') return 'rest'
     if (log?.completed) return 'completed'
     if (diff < 0) return 'failed'
     return 'upcoming'
@@ -45,6 +46,7 @@ export default function CalendarScreen({ onDayTap }: { onDayTap: (day: number) =
         {[
           { color: 'bg-orange-500', label: 'Done' },
           { color: 'bg-amber-500', label: 'Match' },
+          { color: 'bg-orange-900/60 border border-orange-500/50', label: 'Rest' },
           { color: 'bg-red-800', label: 'Missed' },
           { color: 'bg-zinc-800', label: 'Upcoming' },
         ].map(({ color, label }) => (
@@ -85,6 +87,7 @@ export default function CalendarScreen({ onDayTap }: { onDayTap: (day: number) =
                 'cal-day relative border transition-all',
                 status === 'completed' && 'bg-orange-500/20 border-orange-500/40 text-orange-400 font-bold',
                 status === 'match' && 'bg-amber-500/20 border-amber-500/40 text-amber-400 font-bold',
+                status === 'rest' && 'bg-orange-950/40 border-orange-700/40 text-orange-300 font-bold',
                 status === 'failed' && 'bg-red-950/40 border-red-900/40 text-red-400',
                 status === 'upcoming' && 'bg-zinc-900 border-zinc-800 text-zinc-600',
                 status === 'today' && 'bg-zinc-800 border-zinc-700 text-white',
@@ -99,6 +102,9 @@ export default function CalendarScreen({ onDayTap }: { onDayTap: (day: number) =
               )}
               {status === 'match' && (
                 <span className="absolute bottom-0.5 right-1 text-[9px]">🏏</span>
+              )}
+              {status === 'rest' && (
+                <span className="absolute bottom-0.5 right-1 text-[9px]">😴</span>
               )}
             </button>
           )
@@ -123,7 +129,11 @@ export default function CalendarScreen({ onDayTap }: { onDayTap: (day: number) =
                   : 'text-red-400'
               )}>
                 {selectedLog.completed
-                  ? selectedLog.day_type === 'match' ? '🏏 Match Day — Completed' : '✅ Completed'
+                  ? selectedLog.day_type === 'match'
+                    ? '🏏 Match Day — Completed'
+                    : selectedLog.day_type === 'rest'
+                      ? '😴 Rest Day — Completed'
+                      : '✅ Completed'
                   : '❌ Not Completed'}
               </div>
               {selectedLog.batting_balls > 0 && (

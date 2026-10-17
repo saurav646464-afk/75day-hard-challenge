@@ -103,14 +103,8 @@ export default function TodayScreen() {
     })
   }
 
-  const toggleDayType = () => {
-    if (!canEdit) return
-    const newType = viewLog?.day_type === 'match' ? 'normal' : 'match'
-    haptic(50)
-    setDayType(viewDate, newType)
-  }
-
   const isMatch = viewLog?.day_type === 'match'
+  const isRest = viewLog?.day_type === 'rest'
   const isSundayDay = isSunday(viewDate)
   const checkinRequired = isCheckinRequired(viewDate, viewLog || undefined)
 
@@ -145,27 +139,55 @@ export default function TodayScreen() {
           </div>
         </div>
 
-        {/* Day nav & Match toggle */}
-        <div className="flex items-center justify-between mt-3">
-          <button onClick={goBack} className="p-2 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-300 active:bg-zinc-800" aria-label="Previous day">
+        {/* Day nav & 3-way Day Type selector */}
+        <div className="flex items-center gap-2 mt-3">
+          <button onClick={goBack} className="p-2 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-300 active:bg-zinc-800 flex-shrink-0" aria-label="Previous day">
             <ChevronLeft size={20} />
           </button>
           
-          <button
-            onClick={toggleDayType}
-            disabled={!canEdit}
-            className={cn(
-              'flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all border',
-              isMatch
-                ? 'bg-orange-500/20 text-orange-400 border-orange-500/50'
-                : 'bg-zinc-900 text-zinc-300 border-zinc-800',
-              !canEdit && 'opacity-50'
-            )}
-          >
-            <span>{isMatch ? '🏏 Match Day' : '🏋️ Normal Day'}</span>
-          </button>
+          <div className="flex-1 grid grid-cols-3 gap-1 bg-zinc-900 p-1 rounded-xl border border-zinc-800">
+            <button
+              onClick={() => { haptic(50); setDayType(viewDate, 'normal') }}
+              disabled={!canEdit}
+              className={cn(
+                'py-1.5 px-1 rounded-lg text-xs font-bold transition-all text-center truncate',
+                !isMatch && !isRest
+                  ? 'bg-orange-500 text-white shadow-sm'
+                  : 'text-zinc-400 hover:text-white',
+                !canEdit && 'opacity-50'
+              )}
+            >
+              🏋️ Normal
+            </button>
+            <button
+              onClick={() => { haptic(50); setDayType(viewDate, 'match') }}
+              disabled={!canEdit}
+              className={cn(
+                'py-1.5 px-1 rounded-lg text-xs font-bold transition-all text-center truncate',
+                isMatch
+                  ? 'bg-orange-500 text-white shadow-sm'
+                  : 'text-zinc-400 hover:text-white',
+                !canEdit && 'opacity-50'
+              )}
+            >
+              🏏 Match
+            </button>
+            <button
+              onClick={() => { haptic(50); setDayType(viewDate, 'rest') }}
+              disabled={!canEdit}
+              className={cn(
+                'py-1.5 px-1 rounded-lg text-xs font-bold transition-all text-center truncate',
+                isRest
+                  ? 'bg-orange-500 text-white shadow-sm'
+                  : 'text-zinc-400 hover:text-white',
+                !canEdit && 'opacity-50'
+              )}
+            >
+              😴 Rest
+            </button>
+          </div>
 
-          <button onClick={goForward} className="p-2 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-300 active:bg-zinc-800" aria-label="Next day">
+          <button onClick={goForward} className="p-2 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-300 active:bg-zinc-800 flex-shrink-0" aria-label="Next day">
             <ChevronRight size={20} />
           </button>
         </div>
@@ -287,8 +309,31 @@ export default function TodayScreen() {
           </div>
         </div>
 
+        {/* ── REST DAY SECTION ── */}
+        {isRest && (
+          <div className="space-y-4">
+            <div className="p-4 rounded-2xl bg-orange-950/20 border border-orange-500/40 text-center">
+              <div className="text-3xl mb-1.5">😴</div>
+              <div className="text-base font-black text-orange-400">Rest & Active Recovery Day</div>
+              <p className="text-xs text-zinc-300 mt-1 leading-relaxed">
+                Take rest, recharge your muscles! Rest days automatically count as complete for your 75 Hard streak. Agar gym ya thoda light practice kiya hai toh niche customize kar ke tick kar sakte ho.
+              </p>
+            </div>
+
+            <TaskSection title="⚡ Optional Practice & Gym (Customizable)">
+              <GymTask log={log} canEdit={canEdit} onUpdate={updateTodayLog} />
+              <SimpleTask key="rest-stretching" taskKey="stretching" log={log} taskConfig={taskConfig} canEdit={canEdit} onToggle={toggleTask} optional />
+              <SimpleTask key="rest-shadow" taskKey="shadow" log={log} taskConfig={taskConfig} canEdit={canEdit} onToggle={toggleTask} optional />
+              <SimpleTask key="rest-running" taskKey="running" log={log} taskConfig={taskConfig} canEdit={canEdit} onToggle={toggleTask} optional badge="Light / Jog" />
+              <SimpleTask key="rest-keeping" taskKey="keeping" log={log} taskConfig={taskConfig} canEdit={canEdit} onToggle={toggleTask} optional badge="Light Keeping" />
+              <SimpleTask key="rest-visualization" taskKey="visualization" log={log} taskConfig={taskConfig} canEdit={canEdit} onToggle={toggleTask} optional />
+              <SimpleTask key="rest-video_review" taskKey="video_review" log={log} taskConfig={taskConfig} canEdit={canEdit} onToggle={toggleTask} optional />
+            </TaskSection>
+          </div>
+        )}
+
         {/* ── CRICKET SECTION ── */}
-        {!isMatch && (
+        {!isMatch && !isRest && (
           <TaskSection title="🏏 Cricket Training">
             <BallCountTask
               label="Batting"
@@ -298,20 +343,21 @@ export default function TodayScreen() {
               onChange={v => updateTodayLog({ batting_balls: v })}
               disabled={!canEdit}
             />
-            <BallCountTask
-              label="Wicket Keeping"
-              value={log.keeping_balls}
-              chips={[25, 50, 100]}
-              badge="4x/week"
-              onChange={v => updateTodayLog({ keeping_balls: v })}
-              disabled={!canEdit}
+            <SimpleTask
+              key="keeping"
+              taskKey="keeping"
+              log={log}
+              taskConfig={taskConfig}
+              canEdit={canEdit}
+              onToggle={toggleTask}
+              badge="3x/week"
             />
             <BallCountTask
               label="Fielding Catching"
               value={log.catching_balls}
               target={100}
               chips={[10, 25]}
-              badge="5x/week"
+              badge="4x/week"
               onChange={v => updateTodayLog({ catching_balls: v })}
               disabled={!canEdit}
             />
@@ -410,7 +456,7 @@ function SimpleTask({
         'flex-1 text-[16px] font-medium leading-snug py-4',
         done ? 'text-zinc-500 line-through' : 'text-white'
       )}>
-        {cfg.label}
+        {badge ? cfg.label.replace(/\s*\(\d+x\/week\)/i, '') : cfg.label}
       </span>
       {badge && (
         <span className="text-[10px] text-orange-400 bg-orange-950/60 border border-orange-900 px-2 py-0.5 rounded-full font-bold">{badge}</span>

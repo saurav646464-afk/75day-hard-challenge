@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS daily_logs (
   user_id         uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE DEFAULT auth.uid(),
   attempt_id      uuid NOT NULL REFERENCES attempts(id) ON DELETE CASCADE,
   log_date        date NOT NULL,
-  day_type        text NOT NULL DEFAULT 'normal' CHECK (day_type IN ('normal', 'match')),
+  day_type        text NOT NULL DEFAULT 'normal' CHECK (day_type IN ('normal', 'match', 'rest')),
   tasks           jsonb NOT NULL DEFAULT '{}',
   batting_balls   int NOT NULL DEFAULT 0,
   keeping_balls   int NOT NULL DEFAULT 0,

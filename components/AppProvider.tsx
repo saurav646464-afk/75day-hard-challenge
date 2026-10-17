@@ -23,7 +23,7 @@ interface AppContextType {
   
   // Actions
   updateTodayLog: (updates: Partial<DailyLog>) => Promise<void>
-  setDayType: (date: string, type: 'normal' | 'match') => Promise<void>
+  setDayType: (date: string, type: 'normal' | 'match' | 'rest') => Promise<void>
   confirmFailureRestart: () => Promise<void>
   dismissFailure: () => void
   refetch: () => Promise<void>
@@ -138,8 +138,8 @@ export function AppProvider({ children, userId }: { children: React.ReactNode; u
         // Auto-sync default labels if rules were updated
         const defaultLabels: Record<string, string> = {
           batting: 'Batting - 500+ balls',
-          keeping: 'Wicket Keeping (4x/week)',
-          catching: 'Fielding Catching - 100+ (5x/week)',
+          keeping: 'Wicket Keeping (3x/week)',
+          catching: 'Fielding Catching - 100+ (4x/week)',
           running: 'Running / Sprints (3x/week)',
           gym: 'Gym (3x per week)',
         }
@@ -309,7 +309,7 @@ export function AppProvider({ children, userId }: { children: React.ReactNode; u
     debouncedSave(updated)
   }
 
-  async function setDayType(date: string, type: 'normal' | 'match') {
+  async function setDayType(date: string, type: 'normal' | 'match' | 'rest') {
     // Only for today
     if (date !== today) return
     await updateTodayLog({ day_type: type })
@@ -370,8 +370,8 @@ export function AppProvider({ children, userId }: { children: React.ReactNode; u
 function getDefaultTaskConfig(userId: string) {
   return [
     { user_id: userId, key: 'batting',       label: 'Batting - 500+ balls',               enabled: true, required_on_match: false, is_custom: false, sort_order: 1 },
-    { user_id: userId, key: 'keeping',       label: 'Wicket Keeping (4x/week)',           enabled: true, required_on_match: false, is_custom: false, sort_order: 2 },
-    { user_id: userId, key: 'catching',      label: 'Fielding Catching - 100+ (5x/week)', enabled: true, required_on_match: false, is_custom: false, sort_order: 3 },
+    { user_id: userId, key: 'keeping',       label: 'Wicket Keeping (3x/week)',           enabled: true, required_on_match: false, is_custom: false, sort_order: 2 },
+    { user_id: userId, key: 'catching',      label: 'Fielding Catching - 100+ (4x/week)', enabled: true, required_on_match: false, is_custom: false, sort_order: 3 },
     { user_id: userId, key: 'shadow',        label: 'Shadow - 20 min',                    enabled: true, required_on_match: false, is_custom: false, sort_order: 4 },
     { user_id: userId, key: 'stretching',    label: 'Stretching / Mobility',              enabled: true, required_on_match: false, is_custom: false, sort_order: 5 },
     { user_id: userId, key: 'running',       label: 'Running / Sprints (3x/week)',        enabled: true, required_on_match: false, is_custom: false, sort_order: 6 },
