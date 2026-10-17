@@ -9,7 +9,7 @@ import {
   isWaterDone, isSleepDone, isMealsDone, isTaskDone, getDayCompletionPercent, formatDisplayDate,
   CHALLENGE_DAYS, GYM_REQUIRED_PER_WEEK, RUNNING_REQUIRED_PER_WEEK,
   KEEPING_REQUIRED_PER_WEEK, CATCHING_REQUIRED_PER_WEEK, BATTING_TARGET_BALLS,
-  isCheckinRequired, addDays
+  isCheckinRequired, addDays, diffDays
 } from '@/lib/challenge'
 import { cn, haptic, celebrateCompletion, formatWater } from '@/lib/utils'
 import { ChevronLeft, ChevronRight, Check, Flame, Dumbbell, Droplets, Moon, BookOpen, AlertTriangle } from 'lucide-react'
@@ -22,7 +22,7 @@ import OfflineBadge from '@/components/ui/OfflineBadge'
 export default function TodayScreen() {
   const {
     attempt, todayLog, allLogs, taskConfig, today, todayDayNum,
-    updateTodayLog, setDayType, saveStatus, failureInfo,
+    updateTodayLog, updateLogForDate, setDayType, saveStatus, failureInfo,
     confirmFailureRestart, dismissFailure
   } = useApp()
 
@@ -36,8 +36,13 @@ export default function TodayScreen() {
     : allLogs.find(l => l.log_date === viewDate) || null
 
   const isToday = viewDate === today
-  const canEdit = isToday
+  const isYesterday = diffDays(viewDate, today) === 1
+  const canEdit = isToday || isYesterday
   const dayNum = attempt ? getDayNumber(attempt.start_date, viewDate) : todayDayNum
+
+  const updateLog = (updates: Partial<import('@/types').DailyLog>) => {
+    updateLogForDate(viewDate, updates)
+  }
 
   const completionPct = viewLog
     ? getDayCompletionPercent(viewLog, taskConfig)
@@ -98,7 +103,7 @@ export default function TodayScreen() {
     if (!canEdit || (!viewLog && !attempt)) return
     haptic(50)
     const current = viewLog?.tasks[key] || false
-    updateTodayLog({
+    updateLog({
       tasks: { ...(viewLog?.tasks || {}), [key]: !current }
     })
   }
@@ -193,9 +198,15 @@ export default function TodayScreen() {
         </div>
       </div>
 
-      {!isToday && (
+      {!isToday && !isYesterday && (
         <div className="mx-4 mt-4 p-3 rounded-xl bg-zinc-900 border border-zinc-800 text-center text-sm text-zinc-400">
           Past day — view only
+        </div>
+      )}
+
+      {isYesterday && (
+        <div className="mx-4 mt-4 p-2.5 rounded-xl bg-orange-950/40 border border-orange-500/40 text-center text-xs text-orange-300 font-bold">
+          ✏️ Editing Yesterday (Day {dayNum})
         </div>
       )}
 
@@ -321,7 +332,7 @@ export default function TodayScreen() {
             </div>
 
             <TaskSection title="⚡ Optional Practice & Gym (Customizable)">
-              <GymTask log={log} canEdit={canEdit} onUpdate={updateTodayLog} />
+              <GymTask log={log} canEdit={canEdit} onUpdate={updateLog} />
               <SimpleTask key="rest-stretching" taskKey="stretching" log={log} taskConfig={taskConfig} canEdit={canEdit} onToggle={toggleTask} optional />
               <SimpleTask key="rest-shadow" taskKey="shadow" log={log} taskConfig={taskConfig} canEdit={canEdit} onToggle={toggleTask} optional />
               <SimpleTask key="rest-running" taskKey="running" log={log} taskConfig={taskConfig} canEdit={canEdit} onToggle={toggleTask} optional badge="Light / Jog" />
@@ -340,7 +351,7 @@ export default function TodayScreen() {
               value={log.batting_balls}
               target={BATTING_TARGET_BALLS}
               chips={[50, 100, 200]}
-              onChange={v => updateTodayLog({ batting_balls: v })}
+              onChange={v => updateLog({ batting_balls: v })}
               disabled={!canEdit}
             />
             <SimpleTask
@@ -358,7 +369,7 @@ export default function TodayScreen() {
               target={100}
               chips={[10, 25]}
               badge="4x/week"
-              onChange={v => updateTodayLog({ catching_balls: v })}
+              onChange={v => updateLog({ catching_balls: v })}
               disabled={!canEdit}
             />
             <SimpleTask key="running" taskKey="running" log={log} taskConfig={taskConfig} canEdit={canEdit} onToggle={toggleTask} badge="3x/week" />
@@ -373,7 +384,7 @@ export default function TodayScreen() {
         {isMatch && (
           <TaskSection title="🏏 Match Day">
             <MatchPlayedTask log={log} canEdit={canEdit} onToggle={toggleTask} />
-            <MatchStatsInput log={log} canEdit={canEdit} onUpdate={updateTodayLog} />
+            <MatchStatsInput log={log} canEdit={canEdit} onUpdate={updateLog} />
             <SimpleTask key="stretching" taskKey="stretching" log={log} taskConfig={taskConfig} canEdit={canEdit} onToggle={toggleTask} optional />
             <SimpleTask key="visualization" taskKey="visualization" log={log} taskConfig={taskConfig} canEdit={canEdit} onToggle={toggleTask} optional />
           </TaskSection>
@@ -383,16 +394,16 @@ export default function TodayScreen() {
         <TaskSection title="🧘 Mind & Focus">
           <SimpleTask key="meditation" taskKey="meditation" log={log} taskConfig={taskConfig} canEdit={canEdit} onToggle={toggleTask} />
           <SimpleTask key="naam_jap" taskKey="naam_jap" log={log} taskConfig={taskConfig} canEdit={canEdit} onToggle={toggleTask} />
-          <JournalTask log={log} canEdit={canEdit} onUpdate={updateTodayLog} journalRef={journalRef} />
+          <JournalTask log={log} canEdit={canEdit} onUpdate={updateLog} journalRef={journalRef} />
         </TaskSection>
 
         {/* ── BODY & DISCIPLINE ── */}
         <TaskSection title="💪 Body & Discipline">
-          <MealTask log={log} canEdit={canEdit} onUpdate={updateTodayLog} />
-          <WaterTask log={log} canEdit={canEdit} onUpdate={updateTodayLog} />
-          <SleepTask log={log} canEdit={canEdit} onUpdate={updateTodayLog} />
+          <MealTask log={log} canEdit={canEdit} onUpdate={updateLog} />
+          <WaterTask log={log} canEdit={canEdit} onUpdate={updateLog} />
+          <SleepTask log={log} canEdit={canEdit} onUpdate={updateLog} />
           <SimpleTask key="no_junk_food" taskKey="no_junk_food" log={log} taskConfig={taskConfig} canEdit={canEdit} onToggle={toggleTask} />
-          <GymTask log={log} canEdit={canEdit} onUpdate={updateTodayLog} />
+          {!isRest && <GymTask log={log} canEdit={canEdit} onUpdate={updateLog} />}
         </TaskSection>
 
         {isSundayDay && attempt && (

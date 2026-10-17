@@ -23,6 +23,7 @@ interface AppContextType {
   
   // Actions
   updateTodayLog: (updates: Partial<DailyLog>) => Promise<void>
+  updateLogForDate: (date: string, updates: Partial<DailyLog>) => Promise<void>
   setDayType: (date: string, type: 'normal' | 'match' | 'rest') => Promise<void>
   confirmFailureRestart: () => Promise<void>
   dismissFailure: () => void
@@ -281,7 +282,9 @@ export function AppProvider({ children, userId }: { children: React.ReactNode; u
       if (result.error) throw result.error
 
       const savedLog = result.data as DailyLog
-      setTodayLog(savedLog)
+      if (savedLog.log_date === today) {
+        setTodayLog(savedLog)
+      }
       setAllLogs(prev => {
         const idx = prev.findIndex(l => l.log_date === savedLog.log_date)
         if (idx >= 0) {
@@ -300,19 +303,33 @@ export function AppProvider({ children, userId }: { children: React.ReactNode; u
     }
   }
 
-  async function updateTodayLog(updates: Partial<DailyLog>) {
-    if (!todayLog && !attempt) return
-    const base = todayLog || emptyLog(attempt!.id, today, userId)
+  async function updateLogForDate(date: string, updates: Partial<DailyLog>) {
+    if (!attempt) return
+    const existing = (date === today ? todayLog : null) || allLogs.find(l => l.log_date === date)
+    const base = existing || emptyLog(attempt.id, date, userId)
     const updated: DailyLog = { ...base, ...updates }
-    // Optimistic UI update
-    setTodayLog(updated)
+    
+    if (date === today) {
+      setTodayLog(updated)
+    }
+    setAllLogs(prev => {
+      const idx = prev.findIndex(l => l.log_date === date)
+      if (idx >= 0) {
+        const next = [...prev]
+        next[idx] = updated
+        return next
+      }
+      return [...prev, updated]
+    })
     debouncedSave(updated)
   }
 
+  async function updateTodayLog(updates: Partial<DailyLog>) {
+    await updateLogForDate(today, updates)
+  }
+
   async function setDayType(date: string, type: 'normal' | 'match' | 'rest') {
-    // Only for today
-    if (date !== today) return
-    await updateTodayLog({ day_type: type })
+    await updateLogForDate(date, { day_type: type })
   }
 
   async function confirmFailureRestart() {
@@ -357,6 +374,7 @@ export function AppProvider({ children, userId }: { children: React.ReactNode; u
       saveStatus,
       failureInfo,
       updateTodayLog,
+      updateLogForDate,
       setDayType,
       confirmFailureRestart,
       dismissFailure,
